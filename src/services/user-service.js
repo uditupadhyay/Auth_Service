@@ -1,4 +1,5 @@
 const UserRepository=require('../repository/user-repository');
+const bcrypt=require('bcrypt');
 
 const jwt=require('jsonwebtoken');
 
@@ -19,6 +20,27 @@ const {JWT_KEY}=require('../config/serverConfig');
          }
     }
 
+    async signIn1(email,planePassword){
+        try {
+            // step 1-> fecth the user using the email
+            const user=await this.userRepository.getByEmail(email);
+            // step 2-> compare incoming plane password with stores encrypted password
+            const passwordMatch=this.checkPassword(planePassword,user.password);
+            if(!passwordMatch){
+                console.log("password doesn't match");
+                throw {error:'Incorrect password'};
+            }
+
+            // step 3 -> if password match thn create a token and send it to the user
+            const newJWT=this.createToken({email:user.email,id:user.id});
+            return newJWT;
+            
+        } catch (error) {
+            console.log("Something is wrong in signin process");
+            throw error;
+        }
+    }
+
     createToken(user){
         try {
             const result=jwt.sign(user,JWT_KEY,{expiresIn:'1h'});
@@ -35,6 +57,15 @@ const {JWT_KEY}=require('../config/serverConfig');
             return response;
         } catch (error) {
             console.log("Something went wrong in token validation",error);
+            throw error;
+        }
+    }
+
+    checkPassword(userInputPlainPassword,encryptedPassword){
+        try {
+            return bcrypt.compareSync(userInputPlainPassword,encryptedPassword);
+        } catch (error) {
+            console.log("Something went wrong in password comparision");
             throw error;
         }
     }
