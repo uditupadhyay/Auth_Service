@@ -47,7 +47,7 @@ const {JWT_KEY}=require('../config/serverConfig');
             if(!response){
                 throw {error:'Invalid token'}
             }
-            const user=this.userRepository.getById(response.id);
+            const user=await this.userRepository.getById(response.id);
             if(!user){
                 throw {error:'No user with the corrosponding token exist'};
             }
